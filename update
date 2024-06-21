@@ -7,27 +7,29 @@ _read_config() {
     # Check if the config file exists
     if [ ! -f "$THE_CONFIG_FILE" ]; then
         echo "The config file does not exist. Please run \`bash setup\` or create file .config manually."
+        echo "$TIME - The config file does not exist" >> $LOG_FILE
         exit 1
     fi
 
     # Read the config file line by line
     while read line; do
         case $line in
-            user=*)
-                readonly USERNAME="${line#*=}"
+            username=*)
+                readonly N_USERNAME="${line#*=}"
                 ;;
             password=*)
-                readonly PASSWORD="${line#*=}"
+                readonly N_PASSWORD="${line#*=}"
                 ;;
             hostname=*)
-                readonly HOSTNAME="${line#*=}"
+                readonly N_HOSTNAME="${line#*=}"
                 ;;
         esac
     done < "$THE_CONFIG_FILE"
 
     # Check if the config file is set properly
-    if [[ -z "$USERNAME" || -z "$PASSWORD" || -z "$HOSTNAME" ]]; then
+    if [[ -z "$N_USERNAME" || -z "$N_PASSWORD" || -z "$N_HOSTNAME" ]]; then
         echo "The config file is not set properly. Please run \`bash setup\` or create file .config manually."
+        echo "$TIME - The config file is not set properly" >> $LOG_FILE
         exit 1
     fi
 }
@@ -63,7 +65,11 @@ _get_public_ip() {
 }
 
 # Declare constants
-readonly CONFIG_FILE=$(readlink -f .config)  # Get the absolute path of the config file
+readonly APP_DIR=$(cd "$(dirname "${BASH_SOURCE}")" &> /dev/null && pwd)  # Get the absolute path of the current directory
+readonly DATE=$(date '+%Y%m%d')
+readonly TIME=$(date '+%Y-%m-%d %H:%M')
+readonly LOG_FILE="$APP_DIR/logs/$DATE.log"
+readonly CONFIG_FILE="$APP_DIR/.config"
 _read_config $CONFIG_FILE
 
 # Declare variables with default values
@@ -73,12 +79,13 @@ ip=""
 _get_public_ip
 if [ -z "$ip" ]; then
     echo "Could not get the public IP"
+    echo "$TIME - Could not get the public IP" >> $LOG_FILE
     exit 1
 else
     # Update IP on No-IP server
     result=$(curl -s -X GET \
         -H "User-Agent: HungVPS NoIPUpdaterShellScript/1.0 ls@hung.vn" \
-        -H "Authorization: Basic $(echo "$USERNAME:$PASSWORD" | base64)" \
-        "https://dynupdate.no-ip.com/nic/update?hostname=${HOSTNAME}&myip=${ip}")
-    echo $result
+        -H "Authorization: Basic $(echo "$N_USERNAME:$N_PASSWORD" | base64)" \
+        "https://dynupdate.no-ip.com/nic/update?hostname=${N_HOSTNAME}&myip=${ip}")
+    echo "$TIME - $result" >> $LOG_FILE
 fi
