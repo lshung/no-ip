@@ -56,9 +56,10 @@ _get_public_ip() {
     )
 
     for url in "${URLS[@]}"; do
-        ip=$(wget -qO- "$url")  # Get the public IP using wget
-        ip=${ip//[[:space:]]/}  # Remove all whitespace (including internal spaces)
-        if _is_valid_ipv4 "$ip"; then
+        raw_ip=$(wget -qO- "$url")  # Get the public IP using wget
+        raw_ip=${raw_ip//[[:space:]]/}  # Remove all whitespace (including internal spaces)
+        if _is_valid_ipv4 "$raw_ip"; then
+            ip=$raw_ip
             break
         fi
     done
@@ -87,5 +88,6 @@ else
         -H "User-Agent: HungVPS NoIPUpdaterShellScript/1.0 ls@hung.vn" \
         -H "Authorization: Basic $(echo "$N_USERNAME:$N_PASSWORD" | base64)" \
         "https://dynupdate.no-ip.com/nic/update?hostname=${N_HOSTNAME}&myip=${ip}")
+    echo "$result"
     echo "$TIME - $result" >> $LOG_FILE
 fi
