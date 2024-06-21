@@ -1,0 +1,43 @@
+#!/bin/bash
+
+# Declare constants
+readonly APP_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)  # Get the absolute path of the current directory
+readonly UPDATE_FILE="$APP_DIR/update"
+readonly CONFIG_FILE="$APP_DIR/.config"
+
+# Read config from input
+read -p "Please enter No-IP username: " username
+read -s -p "Please enter No-IP password: " password
+echo
+read -p "Please enter No-IP hostname: " hostname
+
+# Save config to file
+echo "username=$username" > $CONFIG_FILE
+echo "password=$password" >> $CONFIG_FILE
+echo "hostname=$hostname" >> $CONFIG_FILE
+echo
+echo "Save config successfully"
+
+# Chmod
+chmod 700 $UPDATE_FILE
+chmod 600 $CONFIG_FILE
+echo "Chmod files successfully"
+
+# If $HOME/bin is not in $PATH then append it to ~/.bashrc
+if [[ ":$PATH:" != *":$HOME/bin:"* ]]; then
+    echo 'export PATH="$PATH:$HOME/bin"' >> ~/.bashrc
+    source ~/.bashrc
+fi
+
+# If $HOME/bin does not exist then create it
+if [ ! -d "$HOME/bin" ]; then
+    mkdir -p "$HOME/bin"
+fi
+
+# Create symlink, override if exists
+ln -sf $UPDATE_FILE $HOME/bin/noipupdate
+echo "Create symlink successfully"
+
+# Add cron job
+(crontab -l 2>/dev/null | grep -v 'noipupdate' ; echo "*/5 * * * * $HOME/bin/noipupdate >/dev/null 2>&1") | crontab -
+echo "Create cron job successfully"
