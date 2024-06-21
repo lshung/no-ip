@@ -1,0 +1,23 @@
+#!/bin/bash
+
+# Check if a string is a valid IPv4 using regex
+is_valid_ipv4() {
+    local ip="$1"
+    rx='([1-9]?[0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])'  # A number from 0 to 255
+    if [[ "$ip" =~ ^$rx\.$rx\.$rx\.$rx$ ]]; then
+        return 0  # true
+    else
+        return 1  # false
+    fi
+}
+
+# List of IP addresses to validate
+IP_LIST=("10.0.0.1" "192.168.1.100" "172.16.0.254" "256.0.0.1" "192.168.1.300" "172.16.0.256")
+
+for ip in "${IP_LIST[@]}"; do
+    if is_valid_ipv4 "$ip"; then
+        echo "Valid: $ip"
+    else
+        echo "Invalid: $ip"
+    fi
+done
