@@ -1,7 +1,36 @@
 #!/bin/bash
 
-# Default value for the public IP
-ip=""
+# Function to read config file
+_read_config() {
+    local readonly THE_CONFIG_FILE="$1"
+
+    # Check if the config file exists
+    if [ ! -f "$THE_CONFIG_FILE" ]; then
+        echo "The config file does not exist. Please run \`bash setup\` or create file .config manually."
+        exit 1
+    fi
+
+    # Read the config file line by line
+    while read line; do
+        case $line in
+            user=*)
+                readonly USERNAME="${line#*=}"
+                ;;
+            password=*)
+                readonly PASSWORD="${line#*=}"
+                ;;
+            hostname=*)
+                readonly HOSTNAME="${line#*=}"
+                ;;
+        esac
+    done < "$THE_CONFIG_FILE"
+
+    # Check if the config file is set properly
+    if [[ -z "$USERNAME" || -z "$PASSWORD" || -z "$HOSTNAME" ]]; then
+        echo "The config file is not set properly. Please run \`bash setup\` or create file .config manually."
+        exit 1
+    fi
+}
 
 # Function to check if a string is a valid IPv4 using regex
 _is_valid_ipv4() {
@@ -32,6 +61,13 @@ _get_public_ip() {
         fi
     done
 }
+
+# Declare constants
+readonly CONFIG_FILE=$(readlink -f .config)  # Get the absolute path of the config file
+_read_config $CONFIG_FILE
+
+# Declare variables with default values
+ip=""
 
 # Get the public IP, if failed then exit program
 _get_public_ip
