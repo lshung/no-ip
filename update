@@ -65,8 +65,21 @@ _get_public_ip() {
     done
 }
 
+# Get the absolute path of the current directory (resolves symlinks to the script)
+_get_script_directory() {
+    local source="${BASH_SOURCE[0]}"
+    while [ -L "$source" ]; do
+        # Resolve $source until the file is no longer a symlink
+        local dir=$(cd -P "$(dirname "$source")" >/dev/null 2>&1 && pwd)
+        source=$(readlink "$source")
+        [[ $source != /* ]] && source=$dir/$source
+    done
+    local dir=$(cd -P "$(dirname "$source")" >/dev/null 2>&1 && pwd)
+    echo "$dir"
+}
+
 # Declare constants
-readonly APP_DIR=$(cd "$(dirname "${BASH_SOURCE}")" &> /dev/null && pwd)  # Get the absolute path of the current directory
+readonly APP_DIR=$(_get_script_directory)
 readonly DATE=$(date '+%Y%m%d')
 readonly TIME=$(date '+%Y-%m-%d %H:%M')
 readonly LOG_FILE="$APP_DIR/logs/$DATE.log"
