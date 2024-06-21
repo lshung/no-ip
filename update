@@ -75,5 +75,10 @@ if [ -z "$ip" ]; then
     echo "Could not get the public IP"
     exit 1
 else
-    echo "The public IP is: $ip"
+    # Update IP on No-IP server
+    result=$(curl -s -X GET \
+        -H "User-Agent: HungVPS NoIPUpdaterShellScript/1.0 ls@hung.vn" \
+        -H "Authorization: Basic $(echo "$USERNAME:$PASSWORD" | base64)" \
+        "https://dynupdate.no-ip.com/nic/update?hostname=${HOSTNAME}&myip=${ip}")
+    echo $result
 fi
